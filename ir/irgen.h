@@ -17,6 +17,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Value.h"
+#include "llvm/IR/GlobalValue.h"
 
 using namespace llvm;
 
@@ -28,7 +29,7 @@ public:
     inline Function *getFunction() { return func; }
 
 private:
-    Function *createTopFunction();
+    Function *createFunction();
     void emitIfImpl(Value *cond, const std::string &label);
 
 public:
@@ -37,6 +38,7 @@ public:
     void emitLabel(const std::string &label);
     void emitIf(const std::string &name, const std::string &label);
     void emitIf(int constVal, const std::string &label);
+    void emitPrint(const std::string & text);
 
 private:
     LLVMContext context;

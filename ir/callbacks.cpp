@@ -71,5 +71,7 @@ int link(buf* ob, const buf* link, const buf* title, const buf* content,
 }
 
 void blockquote(buf* ob, const buf* text, void* opaque) {
-    // std::cout << buf2string(text);
+    LLVMIRGenerator* gen = (LLVMIRGenerator*)opaque;
+    std::string t = buf2string(text);
+    gen->emitPrint("test");
 }

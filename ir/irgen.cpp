@@ -11,7 +11,7 @@ using namespace llvm;
 LLVMIRGenerator::LLVMIRGenerator()
     : context(), builder(context), theModule("llmd", context), values() {
     // To explicitly create a new func
-    func = createTopFunction();
+    func = createFunction();
 }
 
 bool LLVMIRGenerator::parseMarkdown(const char* fileName) {
@@ -132,6 +132,18 @@ void LLVMIRGenerator::emitIf(int constVal, const std::string& label) {
     emitIfImpl(cond, label);
 }
 
+void LLVMIRGenerator::emitPrint(const std::string& text) {
+    Value* strValue = builder.CreateGlobalStringPtr(StringRef(text), "gbv");
+    std::vector<Value*> argsV(1);
+    argsV[0] = strValue;
+
+    auto printFunc = theModule.getOrInsertFunction(
+        "printf",
+        FunctionType::get(IntegerType::getInt32Ty(context),
+                          PointerType::get(Type::getInt8Ty(context), 0), true));
+    builder.CreateCall(printFunc, argsV, "call_printf");
+}
+
 void LLVMIRGenerator::emitIf(const std::string& name,
                              const std::string& label) {
     Value* v = builder.CreateLoad(values[name], name);
@@ -157,7 +169,7 @@ void LLVMIRGenerator::emitIfImpl(Value* cond, const std::string& label) {
     builder.SetInsertPoint(endBlock);
 }
 
-Function* LLVMIRGenerator::createTopFunction() {
+Function* LLVMIRGenerator::createFunction() {
     // void main(){}
     Function* func =
         Function::Create(FunctionType::get(builder.getVoidTy(), false),
