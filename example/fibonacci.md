@@ -11,5 +11,5 @@ F(1)=1，F(2)=1, F(n)=F(n-1)+F(n-2)
 [a](`b`)
 [b](`result`)
 [times](`times-1`)
-## `times` label
+![`times`](label)
 > the result of fibonacci(`times`) is `result`

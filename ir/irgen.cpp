@@ -1,3 +1,4 @@
+#include <exception>
 #include "irgen.h"
 //--------------------------------------------------------------------
 // WTF we can only include these headers on cpp rather than irgen.h?
@@ -117,6 +118,43 @@ void LLVMIRGenerator::emitBinaryExpr(const std::string& expr) {
                 break;
         }
     }
+}
+
+void LLVMIRGenerator::emitLabel(const std::string& label) {
+    BasicBlock* labelBlock = BasicBlock::Create(context, label, func);
+    builder.SetInsertPoint(labelBlock);
+}
+
+void LLVMIRGenerator::emitIf(int constVal, const std::string& label) {
+    Value* cond = builder.CreateICmpNE(
+        ConstantInt::get(Type::getInt32Ty(context), constVal),
+        ConstantInt::get(Type::getInt32Ty(context), 0), "ifcond_const");
+    emitIfImpl(cond, label);
+}
+
+void LLVMIRGenerator::emitIf(const std::string& name,
+                             const std::string& label) {
+    Value* v = builder.CreateLoad(values[name], name);
+    Value* cond = builder.CreateICmpNE(
+        v, ConstantInt::get(Type::getInt32Ty(context), 0), "ifcond_var");
+    emitIfImpl(cond, label);
+}
+
+void LLVMIRGenerator::emitIfImpl(Value* cond, const std::string& label) {
+    BasicBlock* thenBlock;
+    bool findLabel = false;
+    for (auto& bb : *func) {
+        if (bb.getName() == label) {
+            findLabel = true;
+            thenBlock = &bb;
+        }
+    }
+    if (!findLabel) {
+        throw new std::exception("specific label does not exist");
+    }
+    BasicBlock* endBlock = BasicBlock::Create(context, "end", func);
+    builder.CreateCondBr(cond, thenBlock, endBlock);
+    builder.SetInsertPoint(endBlock);
 }
 
 Function* LLVMIRGenerator::createTopFunction() {

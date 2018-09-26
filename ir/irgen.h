@@ -25,14 +25,18 @@ public:
     LLVMIRGenerator();
     bool parseMarkdown(const char *fileName);
     inline void dump() { theModule.dump(); }
-    inline Function* getFunction() { return func; }
+    inline Function *getFunction() { return func; }
 
 private:
     Function *createTopFunction();
+    void emitIfImpl(Value *cond, const std::string &label);
 
 public:
     void emitVariable(const std::string &varName, int value);
     void emitBinaryExpr(const std::string &expr);
+    void emitLabel(const std::string &label);
+    void emitIf(const std::string &name, const std::string &label);
+    void emitIf(int constVal, const std::string &label);
 
 private:
     LLVMContext context;
