@@ -1,21 +1,21 @@
 # Using markdown as a programming language
-Èç¹û½«markdownÊÓ×÷Ò»ÃÅ±à³ÌÓïÑÔ¿ÉÒÔ×öÄÄĞ©ÓĞÈ¤µÄÊÂÇé£¿Õâ¸öÏîÄ¿¾ÍÊÇÎªÁË½â¾öÕâ¸öºÃÆæ:)
+å¦‚æœå°†markdownè§†ä½œä¸€é—¨ç¼–ç¨‹è¯­è¨€å¯ä»¥åšå“ªäº›æœ‰è¶£çš„äº‹æƒ…ï¼Ÿè¿™ä¸ªé¡¹ç›®å°±æ˜¯ä¸ºäº†è§£å†³è¿™ä¸ªå¥½å¥‡:)
 
-# Ê¾Àı:Ê¹ÓÃmarkdown¼ÆËãì³²¨ÄÇÆõÊıÁĞ
-+ markdownÔ´Âë:[fibonacci.md](example/fibonacci.md)
-+ Éú³ÉµÄllvm ir: [fibonacci.ll](example/fibonacci.ll)
+# ç¤ºä¾‹:ä½¿ç”¨markdownè®¡ç®—æ–æ³¢é‚£å¥‘æ•°åˆ—
++ markdownæºç :[fibonacci.md](example/fibonacci.md)
++ ç”Ÿæˆçš„llvm ir: [fibonacci.ll](example/fibonacci.ll)
 
-# ÖØĞÂ¶¨ÒåÒ»¸öÍ¼ÁéÍê±¸µÄÓï·¨¼¯
-```comment               // todo:×¢ÊÍ
+# é‡æ–°å®šä¹‰ä¸€ä¸ªå›¾çµå®Œå¤‡çš„è¯­æ³•é›†
+```comment               // todo:æ³¨é‡Š
 
-[var](value)             // ¸³Öµ(Literal,Arithmetic)
+[var](value)             // èµ‹å€¼(Literal,Arithmetic)
 
->                        // Êä³ö
+>                        // è¾“å‡º
 
-`a+b`                    // ËãÊıÔËËã(+,-,*) 
+`a+b`                    // ç®—æœ¯è¿ç®—(+,-,*) 
 
-**label**                // Ìø×ª±ê¼Ç
+**label**                // è·³è½¬æ ‡è®°
 
-![condition](tag)       //  Ìõ¼şÌø×ª(condition!=0)
+![condition](tag)       //  æ¡ä»¶è·³è½¬(condition!=0)
 
 ```
