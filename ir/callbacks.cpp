@@ -72,7 +72,7 @@ int link(buf* ob, const buf* link, const buf* title, const buf* content,
             name, stringValue.length() == 0 ? 0 : atoi(stringValue.c_str()));
 
     } else {  // otherwise, it's an unevaled expression
-        gen->emitBinaryExpr(stringValue);
+        gen->emitBinaryExpr(name,stringValue);
     }
     return CB_SUCCESS;
 }

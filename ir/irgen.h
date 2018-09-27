@@ -12,7 +12,6 @@
 #include "callbacks.h"
 #include "util.h"
 
-#include "llvm/Bitcode/BitcodeWriter.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalValue.h"
@@ -20,6 +19,8 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Value.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
@@ -27,7 +28,7 @@ class LLVMIRGenerator {
 public:
     LLVMIRGenerator(const char *mdFileName);
     inline void dumpToConsole() { theModule.dump(); }
-    void dumpToBitcode();
+    void dumpToFile();
 
 private:
     bool parseMarkdown(const char *fileName);
@@ -36,7 +37,7 @@ private:
 public:
     void emiFunction(const std::string &funcName);
     void emitVariable(const std::string &varName, int value);
-    void emitBinaryExpr(const std::string &expr);
+    void emitBinaryExpr(const std::string &varName, const std::string &expr);
     void emitLabel(const std::string &label);
     void emitIf(const std::string &name, const std::string &label);
     void emitIf(int constVal, const std::string &label);

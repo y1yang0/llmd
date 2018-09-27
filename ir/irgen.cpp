@@ -18,11 +18,11 @@ LLVMIRGenerator::LLVMIRGenerator(const char* mdFileName)
     parseMarkdown(mdFileName);
 }
 
-void LLVMIRGenerator::dumpToBitcode() {
-    std::string fileName = func->getName().operator std::string() + ".bc";
+void LLVMIRGenerator::dumpToFile() {
+    std::string fileName = func->getName().operator std::string() + ".ll";
     raw_fd_ostream* fout = new raw_fd_ostream(
         StringRef(fileName), std::error_code(), sys::fs::OpenFlags());
-    WriteBitcodeToFile(dynamic_cast<const Module*>(&theModule), *fout);
+    theModule.print(*fout, nullptr);
     fout->flush();
     delete fout;
 }
@@ -83,7 +83,8 @@ void LLVMIRGenerator::emitVariable(const std::string& varName, int value) {
     localValues[varName] = localVar;
 }
 
-void LLVMIRGenerator::emitBinaryExpr(const std::string& expr) {
+void LLVMIRGenerator::emitBinaryExpr(const std::string& varName,
+                                     const std::string& expr) {
     std::string lhs, rhs;
     char op;
     for (int i = 1, sec = 0; expr[i] != '`'; i++) {
@@ -99,6 +100,14 @@ void LLVMIRGenerator::emitBinaryExpr(const std::string& expr) {
         }
     }
 
+    // [var](`lhs`)
+    if (lhs.length() != 0 && rhs.length() == 0) {
+        Value* lhsVal = builder.CreateLoad(localValues[lhs]);
+        builder.CreateStore(lhsVal, localValues[varName]);
+        return;
+    }
+
+    // [var](`lhs+rhs`)
     if (lhs.length() != 0 && rhs.length() != 0) {
         Value *lhsVal, *rhsVal;
         // if it's a literal constant
@@ -119,17 +128,26 @@ void LLVMIRGenerator::emitBinaryExpr(const std::string& expr) {
         }
 
         switch (op) {
-            case '+':
-                builder.CreateAdd(lhsVal, rhsVal, "addtmp");
+            case '+': {
+                Value* calcTmp = builder.CreateAdd(lhsVal, rhsVal);
+                builder.CreateStore(calcTmp, localValues[varName]);
                 break;
-            case '-':
-                builder.CreateSub(lhsVal, rhsVal, "subtmp");
+            }
+            case '-': {
+                Value* calcTmp = builder.CreateSub(lhsVal, rhsVal);
+                builder.CreateStore(calcTmp, localValues[varName]);
                 break;
-            case '*':
-                builder.CreateMul(lhsVal, rhsVal, "multmp");
+            }
+            case '*': {
+                Value* calcTmp = builder.CreateMul(lhsVal, rhsVal);
+                builder.CreateStore(calcTmp, localValues[varName]);
+                break;
+            }
             default:
                 break;
         }
+
+        return;
     }
 }
 
@@ -137,13 +155,6 @@ void LLVMIRGenerator::emitLabel(const std::string& label) {
     BasicBlock* labelBlock = BasicBlock::Create(context, label, func);
     builder.CreateBr(labelBlock);
     builder.SetInsertPoint(labelBlock);
-}
-
-void LLVMIRGenerator::emitIf(int constVal, const std::string& label) {
-    Value* cond = builder.CreateICmpNE(
-        ConstantInt::get(Type::getInt32Ty(context), constVal),
-        ConstantInt::get(Type::getInt32Ty(context), 0), "ifcond_const");
-    emitIfImpl(cond, label);
 }
 
 void LLVMIRGenerator::emitPrint(const std::string& text) {
@@ -173,6 +184,13 @@ void LLVMIRGenerator::emitPrint(const std::string& text) {
 }
 
 void LLVMIRGenerator::emitReturn() { builder.CreateRetVoid(); }
+
+void LLVMIRGenerator::emitIf(int constVal, const std::string& label) {
+    Value* cond = builder.CreateICmpNE(
+        ConstantInt::get(Type::getInt32Ty(context), constVal),
+        ConstantInt::get(Type::getInt32Ty(context), 0), "ifcond_const");
+    emitIfImpl(cond, label);
+}
 
 void LLVMIRGenerator::emitIf(const std::string& name,
                              const std::string& label) {
