@@ -1,6 +1,9 @@
 #ifndef _CALLBACKS_H
 #define _CALLBACKS_H
 
+constexpr static int CB_SUCCESS = 0;
+constexpr static int CB_FAILED = 1;
+
 struct sd_callbacks;
 //--------------------------------------------------------------------
 // function declarations of struct sd_callbacks
@@ -45,6 +48,6 @@ void normal_text(struct buf *ob, const struct buf *text, void *opaque);
 void doc_header(struct buf *ob, void *opaque);
 void doc_footer(struct buf *ob, void *opaque);
 
-void registerCallbacks(sd_callbacks &cbs);
+void registerInterestingCallbacks(sd_callbacks &cbs);
 
 #endif  // !_CALLBACKS_H

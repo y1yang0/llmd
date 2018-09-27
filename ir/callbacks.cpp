@@ -1,3 +1,4 @@
+#include <cstring>
 #include <iostream>
 #include <string>
 #include "../parser/markdown.h"
@@ -14,18 +15,25 @@ static std::string buf2string(const buf* const b) {
     return str;
 }
 
-void registerCallbacks(sd_callbacks& cbs) {
+void doc_footer(buf* ob, void* opaque) {
+    LLVMIRGenerator* gen = (LLVMIRGenerator*)opaque;
+    gen->emitReturn();
+}
+
+void registerInterestingCallbacks(sd_callbacks& cbs) {
     cbs.link = link;
     cbs.image = image;
     cbs.blockquote = blockquote;
     cbs.emphasis = emphasis;
+    cbs.header = header;
+    cbs.doc_footer = doc_footer;
 }
 
 int emphasis(buf* ob, const buf* text, void* opaque) {
     LLVMIRGenerator* gen = (LLVMIRGenerator*)opaque;
 
     gen->emitLabel(buf2string(text));
-    return 0;
+    return CB_SUCCESS;
 }
 
 int image(buf* ob, const buf* link, const buf* title, const buf* alt,
@@ -38,9 +46,8 @@ int image(buf* ob, const buf* link, const buf* title, const buf* alt,
         throw new std::exception("jump label can no leave empty");
     }
 
-    // if condition is empty
     if (stringValue.length() == 0) {
-        return 1;
+        return CB_FAILED;
     }
 
     if (stringValue[0] == '`') {
@@ -50,7 +57,7 @@ int image(buf* ob, const buf* link, const buf* title, const buf* alt,
         gen->emitIf(atoi(stringValue.c_str()), label);
     }
 
-    return 0;
+    return CB_SUCCESS;
 }
 
 int link(buf* ob, const buf* link, const buf* title, const buf* content,
@@ -64,14 +71,32 @@ int link(buf* ob, const buf* link, const buf* title, const buf* content,
         gen->emitVariable(
             name, stringValue.length() == 0 ? 0 : atoi(stringValue.c_str()));
 
-    } else {  // otherwise, it's a expression
+    } else {  // otherwise, it's an unevaled expression
         gen->emitBinaryExpr(stringValue);
     }
-    return 0;
+    return CB_SUCCESS;
 }
 
 void blockquote(buf* ob, const buf* text, void* opaque) {
     LLVMIRGenerator* gen = (LLVMIRGenerator*)opaque;
     std::string t = buf2string(text);
-    gen->emitPrint("test");
+    gen->emitPrint(t);
+}
+
+void header(buf* ob, const buf* text, int level, void* opaque) {
+    LLVMIRGenerator* gen = (LLVMIRGenerator*)opaque;
+
+    std::string funcName = buf2string(text);
+
+    // Check if it's a valid function name
+    if (funcName.length() == 0 || !isalpha(funcName[0])) {
+        return;
+    }
+    for (int i = 1; i < funcName.length(); i++) {
+        if (!isalnum(funcName[i])) {
+            return;
+        }
+    }
+    // Create a function by give name
+    gen->emiFunction(funcName);
 }

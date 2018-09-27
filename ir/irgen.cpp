@@ -1,5 +1,6 @@
 #include <exception>
 #include "irgen.h"
+
 //--------------------------------------------------------------------
 // WTF we can only include these headers on cpp rather than irgen.h?
 //--------------------------------------------------------------------
@@ -8,10 +9,22 @@
 
 using namespace llvm;
 
-LLVMIRGenerator::LLVMIRGenerator()
-    : context(), builder(context), theModule("llmd", context), values() {
-    // To explicitly create a new func
-    func = createFunction();
+LLVMIRGenerator::LLVMIRGenerator(const char* mdFileName)
+    : context(),
+      builder(context),
+      theModule("llmd", context),
+      localValues(),
+      func(nullptr) {
+    parseMarkdown(mdFileName);
+}
+
+void LLVMIRGenerator::dumpToBitcode() {
+    std::string fileName = func->getName().operator std::string() + ".bc";
+    raw_fd_ostream* fout = new raw_fd_ostream(
+        StringRef(fileName), std::error_code(), sys::fs::OpenFlags());
+    WriteBitcodeToFile(dynamic_cast<const Module*>(&theModule), *fout);
+    fout->flush();
+    delete fout;
 }
 
 bool LLVMIRGenerator::parseMarkdown(const char* fileName) {
@@ -24,7 +37,7 @@ bool LLVMIRGenerator::parseMarkdown(const char* fileName) {
 
     struct sd_callbacks callbacks;
     memset(&callbacks, 0, sizeof(sd_callbacks));
-    registerCallbacks(callbacks);
+    registerInterestingCallbacks(callbacks);
 
     struct sd_markdown* markdown;
 
@@ -67,7 +80,7 @@ void LLVMIRGenerator::emitVariable(const std::string& varName, int value) {
         tempBuilder.CreateAlloca(Type::getInt32Ty(context), nullptr, varName);
 
     builder.CreateStore(val, localVar);
-    values[varName] = localVar;
+    localValues[varName] = localVar;
 }
 
 void LLVMIRGenerator::emitBinaryExpr(const std::string& expr) {
@@ -93,7 +106,7 @@ void LLVMIRGenerator::emitBinaryExpr(const std::string& expr) {
             lhsVal =
                 ConstantInt::get(Type::getInt32Ty(context), atoi(lhs.c_str()));
         } else {
-            lhsVal = values[lhs];
+            lhsVal = localValues[lhs];
             lhsVal = builder.CreateLoad(lhsVal, lhs);
         }
 
@@ -101,7 +114,7 @@ void LLVMIRGenerator::emitBinaryExpr(const std::string& expr) {
             rhsVal =
                 ConstantInt::get(Type::getInt32Ty(context), atoi(rhs.c_str()));
         } else {
-            rhsVal = values[rhs];
+            rhsVal = localValues[rhs];
             rhsVal = builder.CreateLoad(rhsVal, rhs);
         }
 
@@ -122,6 +135,7 @@ void LLVMIRGenerator::emitBinaryExpr(const std::string& expr) {
 
 void LLVMIRGenerator::emitLabel(const std::string& label) {
     BasicBlock* labelBlock = BasicBlock::Create(context, label, func);
+    builder.CreateBr(labelBlock);
     builder.SetInsertPoint(labelBlock);
 }
 
@@ -133,20 +147,36 @@ void LLVMIRGenerator::emitIf(int constVal, const std::string& label) {
 }
 
 void LLVMIRGenerator::emitPrint(const std::string& text) {
-    Value* strValue = builder.CreateGlobalStringPtr(StringRef(text), "gbv");
-    std::vector<Value*> argsV(1);
-    argsV[0] = strValue;
-
+    // Declare i32 @printf(i8*, ...)
     auto printFunc = theModule.getOrInsertFunction(
         "printf",
         FunctionType::get(IntegerType::getInt32Ty(context),
                           PointerType::get(Type::getInt8Ty(context), 0), true));
-    builder.CreateCall(printFunc, argsV, "call_printf");
+    // Construct argument list for printf
+    auto res = parseInterpolateString(text);
+
+    std::vector<Value*> argsV;
+
+    Value* formatValue = builder.CreateGlobalStringPtr(res[0]);
+    argsV.push_back(formatValue);
+    for (int i = 1; i < res.size(); i++) {
+        std::string& varName = res[i];
+        AllocaInst* localStrVar =
+            builder.CreateAlloca(Type::getInt32Ty(context), nullptr, varName);
+        Value* t = builder.CreateLoad(localValues[varName]);
+        builder.CreateStore(t, localStrVar);
+        argsV.push_back(builder.CreateLoad(localStrVar));
+    }
+
+    // Create function call
+    builder.CreateCall(printFunc, argsV, "c_printf");
 }
+
+void LLVMIRGenerator::emitReturn() { builder.CreateRetVoid(); }
 
 void LLVMIRGenerator::emitIf(const std::string& name,
                              const std::string& label) {
-    Value* v = builder.CreateLoad(values[name], name);
+    Value* v = builder.CreateLoad(localValues[name], name);
     Value* cond = builder.CreateICmpNE(
         v, ConstantInt::get(Type::getInt32Ty(context), 0), "ifcond_var");
     emitIfImpl(cond, label);
@@ -169,12 +199,10 @@ void LLVMIRGenerator::emitIfImpl(Value* cond, const std::string& label) {
     builder.SetInsertPoint(endBlock);
 }
 
-Function* LLVMIRGenerator::createFunction() {
-    // void main(){}
-    Function* func =
-        Function::Create(FunctionType::get(builder.getVoidTy(), false),
-                         Function::ExternalLinkage, "main", &theModule);
+void LLVMIRGenerator::emiFunction(const std::string& funcName) {
+    func = Function::Create(FunctionType::get(builder.getVoidTy(), false),
+                            Function::ExternalLinkage, funcName, &theModule);
+    func->setCallingConv(llvm::CallingConv::C);
     BasicBlock* entry = BasicBlock::Create(context, "entry", func);
     builder.SetInsertPoint(entry);
-    return func;
 }

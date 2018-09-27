@@ -1,10 +1,9 @@
-#include "../ir/irgen.h"
 #include <cstdlib>
+#include "../ir/irgen.h"
 
 int main() {
-    LLVMIRGenerator gen;
-    gen.parseMarkdown("fibonacci.md");
-    gen.dump();
+    LLVMIRGenerator gen("fibonacci.md");
+    gen.dumpToConsole();
     system("pause");
     return 0;
 }

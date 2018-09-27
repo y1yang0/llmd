@@ -10,42 +10,46 @@
 #include <string>
 
 #include "callbacks.h"
+#include "util.h"
 
+#include "llvm/Bitcode/BitcodeWriter.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Value.h"
-#include "llvm/IR/GlobalValue.h"
 
 using namespace llvm;
 
 class LLVMIRGenerator {
 public:
-    LLVMIRGenerator();
-    bool parseMarkdown(const char *fileName);
-    inline void dump() { theModule.dump(); }
-    inline Function *getFunction() { return func; }
+    LLVMIRGenerator(const char *mdFileName);
+    inline void dumpToConsole() { theModule.dump(); }
+    void dumpToBitcode();
 
 private:
-    Function *createFunction();
+    bool parseMarkdown(const char *fileName);
     void emitIfImpl(Value *cond, const std::string &label);
 
 public:
+    void emiFunction(const std::string &funcName);
     void emitVariable(const std::string &varName, int value);
     void emitBinaryExpr(const std::string &expr);
     void emitLabel(const std::string &label);
     void emitIf(const std::string &name, const std::string &label);
     void emitIf(int constVal, const std::string &label);
-    void emitPrint(const std::string & text);
+    void emitPrint(const std::string &text);
+    void emitReturn();
 
 private:
     LLVMContext context;
     IRBuilder<> builder;
     Module theModule;
-    std::map<std::string, AllocaInst *> values;
+    std::map<std::string, AllocaInst *> localValues;
     Function *func;
+    std::string mdFileName;
 };
 
 #endif  // !_IRGEN_H
