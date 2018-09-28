@@ -17,14 +17,41 @@
 
 ```
 
-# 使用示例:使用markdown计算斐波那契数列
-首先编译得到**llmd**(需要在CMakeLists.txt中配置LLVM libs)：
+# 编译构建
+三步即可编译得到**llmd**(需要在CMakeLists.txt中配置LLVM libs)：
 ```bash
 $ mkdir build && cd build && cmake .. && make
 ```
 
-比如以[fibonacci.md](example/fibonacci.md)为例子：
+# 示例1： 你好，世界
+[helloworld.md](example/helloworld.md):
+```bash
+$ llmd helloworld.md # 生成helloworld.ll
+$ clang -c helloworld.ll # 生成helloworld.o
 ```
+得到目标文件后，可以调用它：
+```c
+#include <stdio.h>
+
+void helloworld();
+
+int main(){
+    printf("using markdown as programming language:\n");
+    helloworld();
+    return 0;
+}
+```
+```bash
+$ clang main.o helloworld.o -o helloworld.exe # 大功告成！
+$ ./helloworld.exe
+using markdown as programming language:
+hello, world
+```
+
+# 示例2：计算斐波那契数列
+
+比如以[fibonacci.md](example/fibonacci.md)为例子：
+```bash
 $ llmd fibonacci.md # 生成fibonacci.ll
 $ clang -c fibonacci.ll # 生成fibonacci.o
 ```
@@ -42,8 +69,9 @@ int main(){
 }
 ```
 ```bash
-$ clang -c main.c # 生成main.o
-$ clang -o main.o fibonacci.o # 大功告成！
+$ clang main.o fibonacci.o -o fibonacci.exe # 大功告成！
+$ ./fibonacci.exe
+using markdown as programming languagethe result of fibonacci(50) is 17711
 ```
 
 # 计划

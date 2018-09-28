@@ -1421,10 +1421,14 @@ parse_blockquote(struct buf *ob, struct sd_markdown *rndr, uint8_t *data, size_t
     // We do not need nested parsing for quoteblock so we remove it
 	//parse_block(out, rndr, work_data, work_size);
 
-    memcpy(out->data, work_data,work_size);
-    out->size = work_size;
+    struct buf newbuf;
+    newbuf.data = (uint8_t*)malloc(sizeof(uint8_t)* work_size);
+    newbuf.size = work_size;
+    memcpy(newbuf.data, work_data, work_size);
+
     if (rndr->cb.blockquote)
-		rndr->cb.blockquote(ob, out, rndr->opaque);
+        rndr->cb.blockquote(ob, &newbuf, rndr->opaque);
+    free(newbuf.data);
 	rndr_popbuf(rndr, BUFFER_BLOCK);
 	return end;
 }

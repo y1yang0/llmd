@@ -1,5 +1,7 @@
+; ModuleID = 'llmd'
+source_filename = "llmd"
 
-@0 = private unnamed_addr constant [35 x i8] c"the result of fibonacci(50) is %d\0A\00"
+@0 = private unnamed_addr constant [35 x i8] c"the result of fibonacci(20) is %d\0A\00"
 
 define void @fibonacci() {
 entry:
@@ -10,7 +12,7 @@ entry:
   store i32 1, i32* %a
   store i32 1, i32* %b
   store i32 0, i32* %result
-  store i32 50, i32* %times
+  store i32 20, i32* %times
   br label %label
 
 label:                                            ; preds = %label, %entry

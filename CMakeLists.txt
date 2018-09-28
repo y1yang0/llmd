@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(llmd)     
 
-file(COPY ${CMAKE_SOURCE_DIR}/example/fibonacci.md 
+file(COPY ${CMAKE_SOURCE_DIR}/example/fibonacci.md ${CMAKE_SOURCE_DIR}/example/helloworld.md 
 DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 include_directories("F:\\cpplib\\llvm-5.0.0.src\\build\\include" "F:\\cpplib\\llvm-5.0.0.src\\include")
