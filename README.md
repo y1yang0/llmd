@@ -1,4 +1,6 @@
 # Using markdown as a programming language
+![](bin/carbon.png)
+
 如果将markdown视作一门编程语言可以做哪些有趣的事情？这个项目就是为了解决这个好奇:
 
 # 获取LLMD
