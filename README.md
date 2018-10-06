@@ -1,5 +1,6 @@
 # Using markdown as a programming language
-![](bin/carbon.png)
+![](bin/source.png)
+![](bin/exec.png)
 
 如果将markdown视作一门编程语言可以做哪些有趣的事情？这个项目就是为了解决这个好奇:
 
@@ -11,19 +12,14 @@
 三步即可编译得到**llmd**(需要在CMakeLists.txt中配置LLVM libs)：
 ```bash
 $ mkdir build && cd build && cmake .. && make
+$ llmv your_markdown_file
 ```
 
-# 示例
-> [你好，世界](example/helloworld.md):
-```bash
-$ llmd helloworld.md
-hello, world
-```
-> 计算[斐波那契数列](example/fibonacci.md)：
-```bash
-$ llmd fibonacci.md 
-the result of fibonacci(20) is 17711
-```
+# markdown示例
+> [你好，世界](example/helloworld.md)
+
+> 计算[斐波那契数列](example/fibonacci.md)
+
 
 # 图灵完备的语法集
 ```comment               // todo:注释
